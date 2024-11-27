@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog
 from interface.user_repository import UserRepository
 from interface.task_repository import TaskRepository
+from usecases.TransferAnanUseCase import TransferAnanUseCase
 from usecases.publish_task import PublishTaskUseCase
 from usecases.complete_task import CompleteTaskUseCase
 from usecases.user_login import UserLoginUseCase
@@ -83,7 +84,8 @@ class Application:
             tk.Button(self.root, text="完成任务", command=self.complete_task_ui, width=20).pack(pady=5)
             tk.Button(self.root, text="查看个人信息", command=self.view_user_info_ui, width=20).pack(pady=5)
             tk.Button(self.root, text="消费Anan", command=self.spend_anan_ui, width=20).pack(pady=5)
-
+            tk.Button(self.root, text="转移 Anan", command=self.transfer_anan_ui, width=20).pack(pady=5)
+            tk.Button(self.root, text="查看用户排行榜", command=self.view_leaderboard_ui, width=20).pack(pady=5)
         tk.Button(self.root, text="注销", command=self.logout, width=20).pack(pady=20)
 
     def publish_task_ui(self):
@@ -225,6 +227,27 @@ class Application:
             messagebox.showinfo("消费Anan", f"消费成功！剩余Anan余额：{self.current_user.anan_balance}")
         else:
             messagebox.showerror("错误", "消费失败，余额不足。")
+
+    def transfer_anan_ui(self):
+        """用户转移 Anan 的界面逻辑"""
+        to_username = simpledialog.askstring("转移 Anan", "请输入接收方用户名：")
+        if not to_username:
+            return
+        try:
+            amount = simpledialog.askinteger("转移 Anan", "请输入转移的 Anan 数量：", minvalue=1)
+            if not amount:
+                return
+        except ValueError:
+            messagebox.showerror("错误", "输入的金额无效。")
+            return
+
+    # 调用转移用例
+        transfer_anan_uc = TransferAnanUseCase(self.user_repo)
+        success, message = transfer_anan_uc.execute(self.current_user.username, to_username, amount)
+        if success:
+            messagebox.showinfo("成功", message)
+        else:
+            messagebox.showerror("失败", message)
 
     def view_leaderboard_ui(self):
         users = self.user_repo.users.values()
